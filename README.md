@@ -1,2 +1,1 @@
-# sleep-tracker
-Sleep tracker
+# Sleep tracker

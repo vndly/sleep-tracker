@@ -1,0 +1,47 @@
+apply plugin: 'com.android.application'
+
+android
+{
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+
+    signingConfigs
+    {
+        release
+        {
+            keyAlias RELEASE_KEY_ALIAS
+            keyPassword RELEASE_KEY_PASSWORD
+            storePassword RELEASE_STORE_PASSWORD
+            storeFile file(RELEASE_STORE_FILE)
+        }
+    }
+
+    defaultConfig
+    {
+        applicationId "com.mauriciotogneri.sleeptracker"
+        minSdkVersion 14
+        targetSdkVersion 22
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes
+    {
+        release
+        {
+            debuggable false
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+
+        debug
+        {
+            debuggable true
+        }
+    }
+}
+
+dependencies
+{
+    compile 'com.jjoe64:graphview:4.0.1'
+}
