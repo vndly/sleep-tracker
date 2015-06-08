@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 
 public class DataService extends Service implements SensorEventListener
 {
@@ -26,12 +27,12 @@ public class DataService extends Service implements SensorEventListener
     private WakeLock wakeLock;
 
     private OnSensorData onSensorDataListener;
-    private long initialTime;
     private BufferedWriter bufferedWriter;
 
     private DecimalFormat decimalFormat = new DecimalFormat("#.####");
 
-    private static final int SAMPLES_PER_SECOND = 10;
+    private static final int SAMPLES_PER_SECOND = 8;
+    private static final String COLUMN_SEPARATOR = ",";
 
     @Override
     public IBinder onBind(Intent intent)
@@ -47,8 +48,6 @@ public class DataService extends Service implements SensorEventListener
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-        //Log.d("SERVICE", "CREATED!");
-
         PowerManager powerManager = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "MyWakeLock");
         wakeLock.acquire();
@@ -57,7 +56,6 @@ public class DataService extends Service implements SensorEventListener
     public void startRecording(OnSensorData listener)
     {
         onSensorDataListener = listener;
-        initialTime = System.currentTimeMillis();
 
         setupFile();
 
@@ -67,20 +65,18 @@ public class DataService extends Service implements SensorEventListener
     @Override
     public void onSensorChanged(SensorEvent event)
     {
-        long timestamp = System.currentTimeMillis() - initialTime;
+        long timestamp = System.currentTimeMillis();
 
         float x = event.values[0];
         float y = event.values[1];
         float z = event.values[2];
 
-        writeLine(timestamp + ";" + decimalFormat.format(x) + ";" + decimalFormat.format(y) + ";" + decimalFormat.format(z));
+        writeLine(timestamp + COLUMN_SEPARATOR + decimalFormat.format(x) + COLUMN_SEPARATOR + decimalFormat.format(y) + COLUMN_SEPARATOR + decimalFormat.format(z));
 
-        if (onSensorDataListener != null)
-        {
-            onSensorDataListener.onSensorData(x, y, z, timestamp);
-        }
-
-        //Log.d("DATA", "NEW DATA!");
+//        if (onSensorDataListener != null)
+        //        {
+        //            onSensorDataListener.onSensorData(x, y, z, timestamp);
+        //        }
     }
 
     @Override
@@ -92,12 +88,13 @@ public class DataService extends Service implements SensorEventListener
     {
         try
         {
-            File file = new File(Environment.getExternalStorageDirectory() + "/data_" + initialTime + ".csv");
+            SimpleDateFormat sourceDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+            File file = new File(Environment.getExternalStorageDirectory() + "/" + sourceDateFormat.format(System.currentTimeMillis()) + ".csv");
 
             if (file.createNewFile())
             {
                 bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
-                writeLine("Time;X;Y;Z");
+                writeLine("Time" + COLUMN_SEPARATOR + "X" + COLUMN_SEPARATOR + "Y" + COLUMN_SEPARATOR + "Z");
             }
         }
         catch (Exception e)
@@ -152,25 +149,7 @@ public class DataService extends Service implements SensorEventListener
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        //        Intent notificationIntent = new Intent(this, MainActivity.class);
-        //        notificationIntent.setAction("ACTION");
-        //        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        //        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        //
-        //        Intent nextIntent = new Intent(this, DataService.class);
-        //        nextIntent.setAction("ACTION");
-        //        PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
-        //
-        //        Notification notification = new NotificationCompat.Builder(this).setContentTitle("Data Service").setSmallIcon(R.drawable.app_icon).setContentIntent(pendingIntent).setOngoing(true).addAction(android.R.drawable.ic_media_next, "Next", pnextIntent).build();
-        //        startForeground(123, notification);
-
         return START_STICKY;
-    }
-
-    public void stopService()
-    {
-        stopForeground(true);
-        stopSelf();
     }
 
     public static class ServiceBinder extends Binder

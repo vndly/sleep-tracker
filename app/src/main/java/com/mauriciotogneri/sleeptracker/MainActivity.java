@@ -25,6 +25,8 @@ public class MainActivity extends Activity implements OnSensorData
     private DataService dataService;
     private ServiceConnection serviceConnection;
 
+    private long initialTime;
+
     private final LineGraphSeries<DataPoint> seriesX = new LineGraphSeries<>();
     private final LineGraphSeries<DataPoint> seriesY = new LineGraphSeries<>();
     private final LineGraphSeries<DataPoint> seriesZ = new LineGraphSeries<>();
@@ -77,6 +79,8 @@ public class MainActivity extends Activity implements OnSensorData
 
     private void onConnected(IBinder service)
     {
+        initialTime = System.currentTimeMillis();
+
         ServiceBinder binder = (ServiceBinder) service;
         dataService = binder.getService();
         dataService.startRecording(this);
@@ -110,9 +114,11 @@ public class MainActivity extends Activity implements OnSensorData
     @Override
     public void onSensorData(float x, float y, float z, long timestamp)
     {
-        seriesX.appendData(new DataPoint(timestamp, x), true, MAX_DATA_LENGTH);
-        seriesY.appendData(new DataPoint(timestamp, y), true, MAX_DATA_LENGTH);
-        seriesZ.appendData(new DataPoint(timestamp, z), true, MAX_DATA_LENGTH);
+        long time = timestamp - initialTime;
+
+        seriesX.appendData(new DataPoint(time, x), true, MAX_DATA_LENGTH);
+        seriesY.appendData(new DataPoint(time, y), true, MAX_DATA_LENGTH);
+        seriesZ.appendData(new DataPoint(time, z), true, MAX_DATA_LENGTH);
 
         averageX.setText(String.valueOf(getAverage(seriesX)));
         averageY.setText(String.valueOf(getAverage(seriesY)));
