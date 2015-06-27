@@ -13,6 +13,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileOutputStream;
 
+// TODO: http://android-arsenal.com/details/1/1960
 public class PhotoActivity extends Activity implements Camera.ShutterCallback, Camera.PictureCallback
 {
     private Camera camera;
