@@ -73,10 +73,10 @@ public class DataService extends Service implements SensorEventListener
 
         writeLine(timestamp + COLUMN_SEPARATOR + decimalFormat.format(x) + COLUMN_SEPARATOR + decimalFormat.format(y) + COLUMN_SEPARATOR + decimalFormat.format(z));
 
-//        if (onSensorDataListener != null)
-        //        {
-        //            onSensorDataListener.onSensorData(x, y, z, timestamp);
-        //        }
+        if (onSensorDataListener != null)
+        {
+            onSensorDataListener.onSensorData(x, y, z, timestamp);
+        }
     }
 
     @Override
