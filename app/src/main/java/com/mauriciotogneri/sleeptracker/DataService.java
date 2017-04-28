@@ -8,31 +8,23 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
-import android.os.Environment;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 
 public class DataService extends Service implements SensorEventListener
 {
     private SensorManager sensorManager;
     private Sensor sensor;
     private WakeLock wakeLock;
-
     private OnSensorData onSensorDataListener;
-    private BufferedWriter bufferedWriter;
-
-    private DecimalFormat decimalFormat = new DecimalFormat("#.####");
+    private FileLogger fileLogger;
 
     private static final int SAMPLES_PER_SECOND = 8;
-    private static final String COLUMN_SEPARATOR = ",";
+
+    private static final float THRESHOLD_X = 0.1f;
+    private static final float THRESHOLD_Y = 0.1f;
+    private static final float THRESHOLD_Z = 0.1f;
 
     @Override
     public IBinder onBind(Intent intent)
@@ -51,13 +43,13 @@ public class DataService extends Service implements SensorEventListener
         PowerManager powerManager = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "MyWakeLock");
         wakeLock.acquire();
+
+        fileLogger = new FileLogger();
     }
 
     public void startRecording(OnSensorData listener)
     {
         onSensorDataListener = listener;
-
-        setupFile();
 
         sensorManager.registerListener(this, sensor, (1000 / SAMPLES_PER_SECOND) * 1000);
     }
@@ -71,7 +63,15 @@ public class DataService extends Service implements SensorEventListener
         float y = event.values[1];
         float z = event.values[2];
 
-        writeLine(timestamp + COLUMN_SEPARATOR + decimalFormat.format(x) + COLUMN_SEPARATOR + decimalFormat.format(y) + COLUMN_SEPARATOR + decimalFormat.format(z));
+        onData(timestamp, x, y, z);
+    }
+
+    private void onData(long timestamp, float x, float y, float z)
+    {
+        if (isValid(x, y, z))
+        {
+            fileLogger.log(timestamp, x, y, z);
+        }
 
         if (onSensorDataListener != null)
         {
@@ -79,43 +79,14 @@ public class DataService extends Service implements SensorEventListener
         }
     }
 
+    private boolean isValid(float x, float y, float z)
+    {
+        return (Math.abs(x) > THRESHOLD_X) || (Math.abs(y) > THRESHOLD_Y) || (Math.abs(z) > THRESHOLD_Z);
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy)
     {
-    }
-
-    private void setupFile()
-    {
-        try
-        {
-            SimpleDateFormat sourceDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-            File file = new File(Environment.getExternalStorageDirectory() + "/" + sourceDateFormat.format(System.currentTimeMillis()) + ".csv");
-
-            if (file.createNewFile())
-            {
-                bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
-                writeLine("Time" + COLUMN_SEPARATOR + "X" + COLUMN_SEPARATOR + "Y" + COLUMN_SEPARATOR + "Z");
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private void writeLine(String text)
-    {
-        if (bufferedWriter != null)
-        {
-            try
-            {
-                bufferedWriter.write(text + "\n");
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -134,14 +105,7 @@ public class DataService extends Service implements SensorEventListener
             e.printStackTrace();
         }
 
-        try
-        {
-            bufferedWriter.close();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
+        fileLogger.close();
 
         super.onDestroy();
     }

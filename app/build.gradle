@@ -14,7 +14,7 @@ android
     {
         applicationId 'com.mauriciotogneri.sleeptracker'
         minSdkVersion 14
-        targetSdkVersion 25
+        targetSdkVersion 22
         versionCode 1
         versionName '0.0.1'
     }
