@@ -22,9 +22,9 @@ public class DataService extends Service implements SensorEventListener
 
     private static final int SAMPLES_PER_SECOND = 8;
 
-    private static final float THRESHOLD_X = 0.1f;
-    private static final float THRESHOLD_Y = 0.1f;
-    private static final float THRESHOLD_Z = 0.1f;
+    private static final float THRESHOLD_X = 0.05f;
+    private static final float THRESHOLD_Y = 0.05f;
+    private static final float THRESHOLD_Z = 0.05f;
 
     @Override
     public IBinder onBind(Intent intent)

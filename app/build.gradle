@@ -58,5 +58,6 @@ android
 
 dependencies
 {
-    compile 'com.jjoe64:graphview:4.0.1'
+    compile 'com.jjoe64:graphview:4.2.1'
+    compile 'joda-time:joda-time:2.9.9'
 }
