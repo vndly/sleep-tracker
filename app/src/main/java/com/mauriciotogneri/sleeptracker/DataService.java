@@ -22,9 +22,10 @@ public class DataService extends Service implements SensorEventListener
 
     private static final int SAMPLES_PER_SECOND = 8;
 
-    private static final float THRESHOLD_X = 0.05f;
-    private static final float THRESHOLD_Y = 0.05f;
-    private static final float THRESHOLD_Z = 0.05f;
+    private static final float THRESHOLD_X = 0.06f;
+    private static final float THRESHOLD_Y = 0.06f;
+    private static final float THRESHOLD_Z = 0.06f;
+    private static final float THRESHOLD_SUM = 0.1f;
 
     @Override
     public IBinder onBind(Intent intent)
@@ -81,7 +82,12 @@ public class DataService extends Service implements SensorEventListener
 
     private boolean isValid(float x, float y, float z)
     {
-        return (Math.abs(x) > THRESHOLD_X) || (Math.abs(y) > THRESHOLD_Y) || (Math.abs(z) > THRESHOLD_Z);
+        float newX = Math.abs(x);
+        float newY = Math.abs(y);
+        float newZ = Math.abs(z);
+        float sum = newX + newY + newZ;
+
+        return ((newX > THRESHOLD_X) || (newY > THRESHOLD_Y) || (newZ > THRESHOLD_Z)) && (sum > THRESHOLD_SUM);
     }
 
     @Override
